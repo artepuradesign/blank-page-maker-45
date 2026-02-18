@@ -125,7 +125,11 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({ className = '' }) =
                 className={`border-b p-4 hover:bg-accent cursor-pointer relative ${
                   !notification.is_read ? 'bg-accent/50' : ''
                 }`}
-                onClick={() => handleNotificationClick(notification)}
+                onClick={(e) => {
+                  // Não navegar se clicou no botão X
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  handleNotificationClick(notification);
+                }}
               >
                 <div className="flex flex-col items-start text-left gap-2">
                   {/* Botão fechar no canto superior direito */}
