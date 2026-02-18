@@ -183,6 +183,18 @@ export const useNotifications = (autoRefresh = true, refreshInterval = 30000) =>
     try {
       console.log('🗑️ Deletando notificação:', notificationId);
       
+      // Remover localmente de imediato (otimistic update)
+      const notificationToDelete = notifications.find(n => n.id === notificationId);
+      const wasUnread = notificationToDelete && !notificationToDelete.is_read;
+      
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      if (wasUnread) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+
+      // Disparar evento global para sincronizar outros componentes imediatamente
+      window.dispatchEvent(new CustomEvent('notificationDeleted', { detail: { id: notificationId } }));
+      
       // Garantir config carregada
       await fetchApiConfig();
       const data = await apiRequest<any>(`/notifications/${notificationId}`, {
@@ -191,25 +203,17 @@ export const useNotifications = (autoRefresh = true, refreshInterval = 30000) =>
       });
 
       console.log('🗑️ Delete response:', data);
-      console.log('🗑️ Delete response:', data);
       
-      if (data.success) {
-        // Buscar a notificação antes de remover para verificar se era não lida
-        const notificationToDelete = notifications.find(n => n.id === notificationId);
-        const wasUnread = notificationToDelete && !notificationToDelete.is_read;
-        
-        // Remover localmente
-        setNotifications(prev => prev.filter(n => n.id !== notificationId));
-        
-        // Atualizar contador não lidas se necessário
-        if (wasUnread) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
+      if (!data.success) {
+        // Reverter se falhou
+        if (notificationToDelete) {
+          setNotifications(prev => [...prev, notificationToDelete].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+          if (wasUnread) setUnreadCount(prev => prev + 1);
         }
-        
-        console.log('🗑️ Notificação deletada com sucesso');
-      } else {
         throw new Error(data.message || 'Erro ao deletar notificação');
       }
+        
+      console.log('🗑️ Notificação deletada com sucesso');
     } catch (err) {
       console.error('🗑️ Error deleting notification:', err);
       throw err;
@@ -222,6 +226,22 @@ export const useNotifications = (autoRefresh = true, refreshInterval = 30000) =>
       .filter(n => !n.is_read)
       .slice(0, limit);
   }, [notifications]);
+
+  // Escutar evento global de deleção para sincronizar todas as instâncias
+  useEffect(() => {
+    const handleNotificationDeleted = (e: Event) => {
+      const { id } = (e as CustomEvent).detail;
+      setNotifications(prev => {
+        const notif = prev.find(n => n.id === id);
+        if (notif && !notif.is_read) {
+          setUnreadCount(c => Math.max(0, c - 1));
+        }
+        return prev.filter(n => n.id !== id);
+      });
+    };
+    window.addEventListener('notificationDeleted', handleNotificationDeleted);
+    return () => window.removeEventListener('notificationDeleted', handleNotificationDeleted);
+  }, []);
 
   // Auto refresh e registro do callback
   useEffect(() => {
