@@ -70,6 +70,9 @@ try {
     } elseif (strpos($uri, '/panels') === 0) {
         error_log("ROUTING: Direcionando para painéis");
         require_once __DIR__ . '/../src/routes/panels.php';
+    } elseif (strpos($uri, '/user/premium-status') !== false) {
+        error_log("ROUTING: Direcionando para premium-status");
+        require_once __DIR__ . '/../routes/user-premium-status.php';
     } elseif (strpos($uri, '/plan/purchase') !== false || strpos($uri, '/user/active-plan') !== false || strpos($uri, '/user/plan-usage') !== false) {
         error_log("ROUTING: Direcionando para compra de planos");
         require_once __DIR__ . '/../src/routes/plan-purchase.php';
