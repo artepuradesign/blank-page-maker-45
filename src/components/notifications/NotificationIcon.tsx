@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ interface NotificationIconProps {
 }
 
 const NotificationIcon: React.FC<NotificationIconProps> = ({ className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const { user, loading } = useAuth();
   const { notifications, unreadCount, markAsRead, deleteNotification, isLoading, refresh } = useNotifications(true, 30000);
   const navigate = useNavigate();
@@ -83,12 +84,14 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({ className = '' }) =
       console.error('Erro ao fechar notificação:', error);
       toast.error('Erro ao remover notificação');
     }
+    // Forçar popover a permanecer aberto após a operação
+    setIsOpen(true);
   };
 
   const recentNotifications = notifications.slice(0, 5);
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
