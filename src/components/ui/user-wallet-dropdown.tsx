@@ -43,9 +43,21 @@ const UserWalletDropdown = ({ onLogout }: UserWalletDropdownProps) => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+      const target = event.target as Node;
+      
+      // Ignorar cliques dentro do dropdown
+      if (dropdownRef.current && dropdownRef.current.contains(target)) return;
+      
+      // Ignorar cliques em portais do Radix UI (Popover, Dialog, etc.)
+      // O Radix renderiza fora do DOM principal usando data-radix-popper-content-wrapper
+      const radixPortal = (target as HTMLElement).closest?.('[data-radix-popper-content-wrapper]');
+      if (radixPortal) return;
+      
+      // Ignorar cliques em qualquer elemento com atributo data-radix
+      const anyRadixEl = (target as HTMLElement).closest?.('[data-radix-collection-item], [role="dialog"], [data-state]');
+      if (anyRadixEl) return;
+
+      setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
