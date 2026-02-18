@@ -190,8 +190,13 @@ const UserWalletDropdown = ({ onLogout }: UserWalletDropdownProps) => {
               </div>
               
               {/* Username */}
-              <div className="text-center font-bold text-foreground mt-2">
-                APIPainel
+              <div className="text-center mt-2">
+                <div className="font-bold text-foreground">
+                  {profile?.full_name || user?.full_name || user?.login || 'Usuário'}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {user?.email || user?.login || ''}
+                </div>
               </div>
             </div>
 
