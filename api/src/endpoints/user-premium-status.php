@@ -4,13 +4,28 @@
 // Usar caminho absoluto para evitar problemas de path relativo
 $baseDir = dirname(dirname(__DIR__)); // Sobe até a raiz da api
 
-require_once $baseDir . '/config/database.php';
-require_once $baseDir . '/config/cors.php';
-require_once $baseDir . '/src/middleware/auth.php';
-require_once $baseDir . '/src/utils/Response.php';
+// Carregar apenas o que não foi carregado ainda pelo public/index.php
+if (!function_exists('authenticate')) {
+    require_once $baseDir . '/src/middleware/auth.php';
+}
+if (!defined('DB_HOST')) {
+    require_once $baseDir . '/config/database.php';
+}
+if (!class_exists('Response')) {
+    require_once $baseDir . '/src/utils/Response.php';
+}
+if (!function_exists('setCORSHeaders')) {
+    // cors.php pode não existir em todos os ambientes, então verificamos
+    $corsFile = $baseDir . '/config/cors.php';
+    if (file_exists($corsFile)) {
+        require_once $corsFile;
+    }
+}
 
 try {
-    setCORSHeaders();
+    if (function_exists('setCORSHeaders')) {
+        setCORSHeaders();
+    }
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(200);
