@@ -128,6 +128,12 @@ try {
         exit();
     }
     
+    // Premium status do usuário
+    if (strpos($endpoint, '/user/premium-status') === 0) {
+        include __DIR__ . '/routes/user-premium-status.php';
+        exit();
+    }
+
     // Compra de planos - verifica se começa com /plan/
     if (strpos($endpoint, '/plan/') === 0 || strpos($endpoint, '/user/active-plan') === 0 || strpos($endpoint, '/user/plan-usage') === 0) {
         include __DIR__ . '/src/routes/plan-purchase.php';
