@@ -6,8 +6,10 @@ import { Crown, Lock, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiRequest, fetchApiConfig } from '@/config/api';
 import { cookieUtils } from '@/utils/cookieUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PremiumPanelsSection: React.FC = () => {
+  const { refreshUser, user } = useAuth();
   const [premiumEnabled, setPremiumEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -20,6 +22,12 @@ const PremiumPanelsSection: React.FC = () => {
   };
 
   useEffect(() => {
+    // Inicializar com o valor do user do contexto se disponível
+    if (user && typeof (user as any).premium_enabled !== 'undefined') {
+      setPremiumEnabled(!!(user as any).premium_enabled);
+      setLoading(false);
+      return;
+    }
     const loadPremiumStatus = async () => {
       try {
         await fetchApiConfig();
@@ -36,7 +44,7 @@ const PremiumPanelsSection: React.FC = () => {
       }
     };
     loadPremiumStatus();
-  }, []);
+  }, [user]);
 
   const handleToggle = async (checked: boolean) => {
     setSaving(true);
@@ -51,6 +59,15 @@ const PremiumPanelsSection: React.FC = () => {
       if (data.success) {
         setPremiumEnabled(checked);
         toast.success(checked ? 'Painéis Premium desbloqueados!' : 'Painéis Premium bloqueados');
+        // Atualizar o cookie auth_user para refletir o novo status premium
+        const savedUser = cookieUtils.get('auth_user');
+        if (savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          parsedUser.premium_enabled = checked ? 1 : 0;
+          cookieUtils.set('auth_user', JSON.stringify(parsedUser), 0.0208);
+        }
+        // Atualizar o contexto de autenticação
+        await refreshUser();
       } else {
         throw new Error(data.message || 'Erro ao atualizar');
       }
