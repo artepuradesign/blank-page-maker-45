@@ -1,10 +1,13 @@
 <?php
 // src/endpoints/user-premium-status.php
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/cors.php';
-require_once __DIR__ . '/../middleware/auth.php';
-require_once __DIR__ . '/../utils/Response.php';
+// Usar caminho absoluto para evitar problemas de path relativo
+$baseDir = dirname(dirname(__DIR__)); // Sobe até a raiz da api
+
+require_once $baseDir . '/config/database.php';
+require_once $baseDir . '/config/cors.php';
+require_once $baseDir . '/src/middleware/auth.php';
+require_once $baseDir . '/src/utils/Response.php';
 
 try {
     setCORSHeaders();
