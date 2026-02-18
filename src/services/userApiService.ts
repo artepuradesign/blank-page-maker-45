@@ -36,6 +36,7 @@ export interface UserData {
   updated_at?: string;
   data_inicio?: string;
   data_fim?: string;
+  premium_enabled?: number | boolean;
 }
 
 export interface ApiResponse<T = any> {
@@ -100,10 +101,14 @@ async function apiRequest<T>(
 }
 
 export const userApiService = {
-  // Obter dados completos do usuário
+  // Obter dados completos do usuário (usa /auth/me para incluir premium_enabled)
   async getUserData(): Promise<ApiResponse<UserData>> {
-    console.log('👤 [USER_API] Buscando dados do usuário');
-    return apiRequest<UserData>('/wallet/profile');
+    console.log('👤 [USER_API] Buscando dados do usuário via /auth/me');
+    const response = await apiRequest<any>('/auth/me');
+    if (response.success && response.data?.user) {
+      return { success: true, data: response.data.user as UserData };
+    }
+    return response;
   },
 
   // Obter saldo do usuário (incluindo saldo do plano)
